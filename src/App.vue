@@ -1,5 +1,28 @@
 <script setup lang="ts">
 import HelloWorld from './components/HelloWorld.vue'
+import UnusedComponent from './components/Unused.vue'
+
+const message: string = 123 
+let counter = 0 
+
+const func = async ():Promise<boolean> =>{
+  counter = 100 / 2
+}
+
+const funcL = (): void =>{
+  counter = 100 / 2
+  return true
+}
+
+                      // const res = funcL
+
+const ne = () => {
+  if(true){
+    return true
+  }
+
+}
+
 </script>
 
 <template>
@@ -15,6 +38,11 @@ import HelloWorld from './components/HelloWorld.vue'
 </template>
 
 <style scoped>
+
+.next {
+  background-color: red;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

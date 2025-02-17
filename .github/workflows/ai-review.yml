@@ -1,0 +1,55 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: step 1
+        id: get-files
+        run: |
+          FILES=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | tr '\n' ' ')
+          echo "FILES=$FILES" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+
+      - name: step 2
+        id: ai-review
+        run: |
+          RESPONSE=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
+            -d '{
+              "model": "gpt-3.5-turbo",
+              "messages": [
+                {"role": "system", "content": "Você é um revisor de código experiente. Analise os seguintes arquivos e sugira melhorias, apontando erros e boas práticas."},
+                {"role": "user", "content": "Arquivos modificados na PR: ${{ env.FILES }}"}
+              ]
+            }')
+
+          if echo "$RESPONSE" | grep -q '"error":'; then
+            echo "Erro na API OpenAI: $RESPONSE"
+            exit 1
+          fi
+
+          REVIEW=$(echo "$RESPONSE" | jq -r '.choices[0].message.content')
+
+          echo "REVIEW=$REVIEW" >> $GITHUB_ENV
+
+      - name: step 3
+        run: |
+          if [[ -z "$REVIEW" ]]; then
+            echo "Nenhuma revisão gerada pela IA."
+            exit 1
+          fi
+
+          gh pr comment ${{ github.event.pull_request.number }} --body "$REVIEW"
+        env:
+          GH_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
