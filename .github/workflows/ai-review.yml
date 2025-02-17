@@ -1,0 +1,45 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: step 1
+        id: get-files
+        run: |
+          FILES=$(gh pr diff ${{ github.event.pull_request.number }} --name-only)
+          echo "FILES<<EOF" >> $GITHUB_ENV
+          echo "$FILES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+
+      - name: step 2
+        id: ai-review
+        run: |
+          RESPONSE=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
+            -d '{
+              "model": "gpt-4",
+              "messages": [
+                {"role": "system", "content": "Você é um revisor de código experiente. Analise os seguintes arquivos e sugira melhorias, apontando erros e boas práticas."},
+                {"role": "user", "content": "Arquivos modificados na PR: '${{ env.FILES }}'"}
+              ]
+            }' | jq -r '.choices[0].message.content')
+
+          echo "REVIEW=$RESPONSE" >> $GITHUB_ENV
+
+      - name: step 3
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "$REVIEW"
+        env:
+          GH_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
