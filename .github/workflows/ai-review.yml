@@ -27,7 +27,7 @@ jobs:
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
             -d '{
-              "model": "gpt-4o",
+              "model": "GPT-3.5",
               "messages": [
                 {"role": "system", "content": "Você é um revisor de código experiente. Analise os seguintes arquivos e sugira melhorias, apontando erros e boas práticas."},
                 {"role": "user", "content": "Arquivos modificados na PR: ${{ env.FILES }}"}
