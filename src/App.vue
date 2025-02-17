@@ -14,7 +14,7 @@ const funcL = (): void =>{
   return true
 }
 
-                      const res = funcL
+                      // const res = funcL
 
 const ne = () => {
   if(true){
