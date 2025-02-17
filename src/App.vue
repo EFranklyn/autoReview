@@ -10,7 +10,7 @@ const func = async ():Promise<boolean> =>{
 }
 
 const funcL = (): void =>{
-  await counter = 100 / 2
+  counter = 100 / 2
   return true
 }
 
